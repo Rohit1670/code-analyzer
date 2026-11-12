@@ -1,0 +1,50 @@
+name: Code Analyzer Security Audit
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  static-security-scan:
+    name: Static Code & APK Threat Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install analyzer dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Code Analyzer CLI Gate
+        run: |
+          python -c '
+          import sys
+          from analyzer import scan_target_full
+
+          findings, exfil, certs, ftree, comps = scan_target_full(".")
+          crit = [f for f in findings if f["severity"] == "Critical"]
+          high = [f for f in findings if f["severity"] == "High"]
+
+          print(f"Total alerts: {len(findings)} | Critical: {len(crit)} | High: {len(high)}")
+          for item in crit + high:
+              print(f"[{item[\"severity\"]}] {item[\"file\"]} -> {item[\"message\"]}")
+
+          if crit or high:
+              print("❌ Build failed due to Critical/High security findings.")
+              sys.exit(1)
+          print("✅ Security gate passed!")
+          '

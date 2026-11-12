@@ -25,20 +25,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 try:
-    default_vt = st.secrets.get("VT_API_KEY", "")
+    server_vt_key = st.secrets.get("VT_API_KEY", "")
 except Exception:
-    default_vt = ""
+    server_vt_key = ""
 
 mode_col, vt_col, clr_col = st.columns([2.1, 1.1, 0.5])
 with mode_col:
     scan_mode = st.radio("Mode:", ["📁 File / APK Scan", "⚖️ Compare Two APKs (Diff)", "🌐 URL / IP Scanner"], horizontal=True)
 with vt_col:
-    vt_api_key = st.text_input("Optional VirusTotal API Key:", value=default_vt, type="password", placeholder="Paste free VT API key...")
-with clr_col:
-    st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-    if st.button("🔄 Reset", use_container_width=True):
-        st.session_state.clear()
-        st.rerun()
+    user_vt_key = st.text_input("Custom VirusTotal API Key (Optional):", value="", type="password", placeholder="Using built-in VT key (or paste yours)...")
+    vt_api_key = user_vt_key.strip() or server_vt_key
 
 if scan_mode == "📁 File / APK Scan":
     up_col, d1_col, d2_col = st.columns([2.2, 1, 1])

@@ -5,6 +5,7 @@ import base64
 from apk_engine import APKStaticAnalyzer
 from geo_enrichment import lookup_ip_geo
 from security_guard import MAX_PYTHON_FILE_BYTES
+from script_scanner import scan_js_or_ps1
 from report_builder import build_markdown_string, build_html_report, build_killchain_dot
 
 
@@ -22,10 +23,7 @@ class AdvancedStaticAnalyzer(ast.NodeVisitor):
         for target in node.targets:
             if isinstance(target, ast.Name) and self.secret_keywords.search(target.id):
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
-                    self._log_issue(
-                        "Security Risk", node.lineno, f"Hardcoded credential: '{target.id}'",
-                        "High", "T1552 - Unsecured Credentials", f"Use `os.environ.get('{target.id.upper()}')`"
-                    )
+                    self._log_issue("Security Risk", node.lineno, f"Hardcoded credential: '{target.id}'", "High", "T1552 - Unsecured Credentials", f"Use `os.environ.get('{target.id.upper()}')`")
         self.generic_visit(node)
 
     def visit_Constant(self, node):
@@ -83,21 +81,19 @@ def scan_target_full(target_path):
     findings, exfil_list, cert_list, file_tree, comp_list = [], [], [], [], []
     if not os.path.exists(target_path):
         return findings, exfil_list, cert_list, file_tree, comp_list
-    files = [target_path] if os.path.isfile(target_path) else [os.path.join(r, fn) for r, _, fs in os.walk(target_path) for fn in fs if fn.endswith(('.py', '.apk'))]
+    files = [target_path] if os.path.isfile(target_path) else [os.path.join(r, fn) for r, _, fs in os.walk(target_path) for fn in fs if fn.endswith(('.py', '.apk', '.js', '.ps1'))]
     for fp in files:
         try:
             if fp.endswith('.py'):
                 py_res, py_exf = _scan_single_python(fp)
-                findings.extend(py_res)
-                exfil_list.extend(py_exf)
+                findings.extend(py_res); exfil_list.extend(py_exf)
+            elif fp.endswith(('.js', '.ps1')):
+                sc_res, sc_exf = scan_js_or_ps1(fp)
+                findings.extend(sc_res); exfil_list.extend(sc_exf)
             elif fp.endswith('.apk'):
                 apk = APKStaticAnalyzer(apk_path=fp)
                 apk.analyze()
-                findings.extend(apk.issues)
-                exfil_list.extend(apk.exfil_targets)
-                cert_list.extend(apk.cert_info)
-                file_tree.extend(apk.file_tree)
-                comp_list.extend(apk.components)
+                findings.extend(apk.issues); exfil_list.extend(apk.exfil_targets); cert_list.extend(apk.cert_info); file_tree.extend(apk.file_tree); comp_list.extend(apk.components)
         except (SyntaxError, RecursionError) as e:
             findings.append({"file": os.path.basename(fp), "type": "Parser Guard", "line": 0, "mitre": "N/A", "message": f"Syntax blocked: {type(e).__name__}", "severity": "Low", "remediation": "Fix syntax."})
     return findings, exfil_list, cert_list, file_tree, comp_list

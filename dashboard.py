@@ -43,7 +43,7 @@ with clr_col:
 if scan_mode == "📁 File / APK Scan":
     up_col, d1_col, d2_col = st.columns([2.2, 1, 1])
     with up_col:
-        uploaded_file = st.file_uploader("Upload (.apk or .py)", type=["apk", "py"], label_visibility="collapsed")
+        uploaded_file = st.file_uploader("Upload (.apk, .py, .js, .ps1)", type=["apk", "py", "js", "ps1"], label_visibility="collapsed")
     with d1_col:
         demo_apk_btn = st.button("📱 Test Demo Trojan (.apk)", use_container_width=True)
     with d2_col:

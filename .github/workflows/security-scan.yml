@@ -1,0 +1,71 @@
+name: Code Analyzer Security Scan
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  static-malware-and-code-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run unit tests with pytest
+        run: python -m pytest -v
+
+      - name: Run Code Analyzer and generate SARIF
+        run: |
+          python - << 'EOF'
+          import os
+          from script_scanner import scan_script_deobfuscated
+          from report_builder import build_sarif_report
+
+          all_findings = []
+          for root, _, files in os.walk("."):
+              if ".git" in root:
+                  continue
+              for fname in files:
+                  ext = os.path.splitext(fname).lower()
+                  if ext in {".ps1", ".js", ".vbs", ".hta"}:
+                      fpath = os.path.join(root, fname)
+                      with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+                          res = scan_script_deobfuscated(f.read(), ext)
+                      for item in res["findings"]:
+                          all_findings.append({
+                              "rule_id": item["rule"].upper(),
+                              "severity": item["severity"],
+                              "description": f"{item['rule']} detected ({item['match_count']} matches)",
+                              "file": fpath.lstrip("./"),
+                          })
+
+          with open("results.sarif", "w", encoding="utf-8") as out:
+              out.write(build_sarif_report("repository", all_findings))
+          print(f"Generated results.sarif with {len(all_findings)} findings.")
+          EOF
+
+      - name: Upload SARIF report to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+          category: code-analyzer

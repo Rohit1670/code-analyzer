@@ -1,0 +1,90 @@
+{
+    "engine_status": "Success",
+    "total_alerts": 12,
+    "results": [
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "APK Metadata",
+            "line": 0,
+            "message": "Package: '' | Main Activity: 'None'",
+            "severity": "Low"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Dropper Indicator",
+            "line": 0,
+            "message": "Embedded archive payload found inside APK: 'assets/hidden_update.apk'",
+            "severity": "Critical"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Native Code",
+            "line": 0,
+            "message": "Compiled native C/C++ library present (inspect in Ghidra): 'lib/arm64-v8a/libnative_crypto.so'",
+            "severity": "Low"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Malicious API Signature",
+            "line": 0,
+            "message": "[classes.dex] Dynamic DEX loading (loads hidden payloads at runtime) (Ldalvik/system/DexClassLoader;)",
+            "severity": "Critical"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Malicious API Signature",
+            "line": 0,
+            "message": "[classes.dex] Java reflection used (often hides sensitive API calls) (Ljava/lang/reflect/Method;->invoke)",
+            "severity": "Medium"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Malicious API Signature",
+            "line": 0,
+            "message": "[classes.dex] Programmatic SMS sending API detected in bytecode (Landroid/telephony/SmsManager;->sendTextMessage)",
+            "severity": "Critical"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Malicious API Signature",
+            "line": 0,
+            "message": "[classes.dex] Shell command execution inside Android app (Ljava/lang/Runtime;->exec)",
+            "severity": "Critical"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Malicious API Signature",
+            "line": 0,
+            "message": "[classes.dex] Reference to 'su' binary (root detection or privilege escalation) (/system/bin/su)",
+            "severity": "Medium"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Network Indicator",
+            "line": 0,
+            "message": "[classes.dex] Embedded URL endpoint: 'http://198.51.100https://c2-exfil-dropzone.xyz'",
+            "severity": "Medium"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "DEX Obfuscation (Base64)",
+            "line": 0,
+            "message": "[classes.dex] Hidden Base64 string decoded -> 'https://hidden-b64-c2-panel.top'",
+            "severity": "High"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "DEX Obfuscation (Hex)",
+            "line": 0,
+            "message": "[classes.dex] Hidden Hex payload decoded -> 'http://185.220.101'",
+            "severity": "High"
+        },
+        {
+            "file": "mock_bank_trojan.apk",
+            "type": "Engine Notice",
+            "line": 0,
+            "message": "JADX CLI not found in PATH. Install JADX to enable full decompiled Java source scanning.",
+            "severity": "Low"
+        }
+    ]
+}
